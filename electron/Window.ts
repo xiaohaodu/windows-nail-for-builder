@@ -4,7 +4,7 @@ import path from "path";
 const top_windows = require("bindings")("window_nail");
 
 interface WindowInfo {
-  address: string;
+  address: number | string;
   top?: boolean;
   title: string;
   // Add any additional properties from the original `WindowInfo` type as needed
@@ -85,10 +85,10 @@ class Window {
 
   getAllWindowsInfo() {
     const windows = top_windows.getAllWindowsInfo();
-    const windowsTemp = this.windows;
+    const windowsTemp = [...this.windows]; // 创建深拷贝避免引用问题
     this.windows = [];
 
-    if (windowsTemp) {
+    if (windowsTemp && windowsTemp.length > 0) {
       for (const i in windows) {
         let flag = false;
         for (const j in windowsTemp) {
@@ -107,9 +107,15 @@ class Window {
     return this.windows;
   }
 
-  switchWindowTopmostByHWND(hwnd: string) {
+  switchWindowTopmostByHWND(hwnd: number | string) {
+    const hwndNum = typeof hwnd === 'string' ? parseInt(hwnd) : hwnd;
+    
     for (const i in this.windows) {
-      if (this.windows[i].address === hwnd) {
+      const windowAddress = typeof this.windows[i].address === 'string' 
+        ? parseInt(this.windows[i].address) 
+        : this.windows[i].address;
+        
+      if (windowAddress === hwndNum) {
         if (!this.windows[i].top) {
           this.windows[i].top = true;
           top_windows.switchWindowTopmostByHWND(this.windows[i].address, true);
@@ -127,7 +133,15 @@ class Window {
     const res = top_windows.getForegroundWindowAtPosition(x, y) as WindowInfo;
     if (this.topWindow) {
       if (res) {
-        if (res.address !== this.topWindow.address) {
+        // 比较地址时确保类型一致
+        const topWindowAddr = typeof this.topWindow.address === 'string' 
+          ? parseInt(this.topWindow.address) 
+          : this.topWindow.address;
+        const resAddr = typeof res.address === 'string' 
+          ? parseInt(res.address) 
+          : res.address;
+          
+        if (resAddr !== topWindowAddr) {
           top_windows.switchWindowTopmostByHWND(this.topWindow.address, false);
           this.topWindow = res;
           top_windows.switchWindowTopmostByHWND(this.topWindow.address, true);

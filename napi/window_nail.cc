@@ -474,10 +474,14 @@ Napi::Value GetForegroundWindowAtPosition(const Napi::CallbackInfo &info)
         return env.Null(); // 没有找到符合条件的窗口
     }
 
-    // TODO: 实现 macOS 版本的 WindowInfo
-    // 这里暂时返回一个包含窗口ID的对象
+    // 返回与 Windows 版本兼容的对象结构
     Napi::Object result = Napi::Object::New(env);
-    result.Set("windowId", Napi::Number::New(env, targetWindowId));
+    result.Set("address", Napi::Number::New(env, targetWindowId)); // 使用 address 保持兼容性
+    
+    // 获取窗口标题
+    std::string title = GetWindowTitle(targetWindowId);
+    result.Set("title", Napi::String::New(env, title));
+    
     return result;
 }
 #endif
@@ -614,15 +618,15 @@ Napi::Value GetAllWindowsInfo(const Napi::CallbackInfo &info)
         CGRect bounds;
         CGRectMakeWithDictionaryRepresentation(boundsDict, &bounds);
 
-        // 创建窗口信息对象
-        Napi::Object windowObj = Napi::Object::New(env);
-        windowObj.Set("windowId", Napi::Number::New(env, windowId));
-        windowObj.Set("title", Napi::String::New(env, windowTitle));
-        windowObj.Set("owner", Napi::String::New(env, ownerNameStr));
-        windowObj.Set("x", Napi::Number::New(env, bounds.origin.x));
-        windowObj.Set("y", Napi::Number::New(env, bounds.origin.y));
-        windowObj.Set("width", Napi::Number::New(env, bounds.size.width));
-        windowObj.Set("height", Napi::Number::New(env, bounds.size.height));
+        // 创建窗口信息对象（与 Windows 版本保持兼容）
+    Napi::Object windowObj = Napi::Object::New(env);
+    windowObj.Set("address", Napi::Number::New(env, windowId)); // 使用 address 保持兼容性
+    windowObj.Set("title", Napi::String::New(env, windowTitle));
+    windowObj.Set("owner", Napi::String::New(env, ownerNameStr));
+    windowObj.Set("x", Napi::Number::New(env, bounds.origin.x));
+    windowObj.Set("y", Napi::Number::New(env, bounds.origin.y));
+    windowObj.Set("width", Napi::Number::New(env, bounds.size.width));
+    windowObj.Set("height", Napi::Number::New(env, bounds.size.height));
 
         result[windowIndex++] = windowObj;
     }
