@@ -24,3 +24,9 @@ release
 *.njsproj
 *.sln
 *.sw?
+
+# Build artifacts
+napi/cmake-build
+napi/build
+build
+bin

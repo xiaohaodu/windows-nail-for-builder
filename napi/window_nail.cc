@@ -7,11 +7,37 @@
 
 #include "third_party/WINDOWINFO/WINDOWINFO.h"
 #include "third_party/LOG/LOG.h"
-// 在这里定义 EnumData 结构体并使用它
+
+bool IsSystemWindowClass(HWND hwnd)
+{
+    TCHAR className[256];
+    GetClassName(hwnd, className, sizeof(className));
+
+    static const TCHAR *SYSTEM_WINDOW_CLASS_NAMES[] = {
+        _T("Progman"),
+        _T("Shell_TrayWnd"),
+        _T("WorkerW"),
+        _T("Windows.UI.Core.CoreWindow"),
+        _T("ApplicationFrameWindow"),
+        _T("Windows.Internal.Shell.TabProxyWindow"),
+        _T("Xaml_WindowedPopupClass"),
+        _T("HwndWrapper")
+    };
+
+    for (const auto &systemClassName : SYSTEM_WINDOW_CLASS_NAMES)
+    {
+        if (_tcsncmp(className, systemClassName, _tcslen(systemClassName)) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 struct EnumData
 {
     POINT point;
-    HWND hwndResult; // 初始化为 nullptr
+    HWND hwndResult;
     EnumData(int x, int y) : point{x, y}, hwndResult{nullptr} {}
 };
 
@@ -115,32 +141,8 @@ static BOOL CALLBACK CheckWindow(HWND hwnd, LPARAM lParam)
     if (!GetWindowRect(hwnd, &rect))
         return TRUE;
 
-    // 检查是否是系统窗口
-    TCHAR className[256];
-    GetClassName(hwnd, className, sizeof(className));
+    bool isSystemWindow = IsSystemWindowClass(hwnd);
 
-    bool isSystemWindow = false;
-    static const TCHAR *SYSTEM_WINDOW_CLASS_NAMES[] = {
-        _T("Progman"),
-        _T("Shell_TrayWnd"),              // 任务栏
-        _T("WorkerW"),                    // 某些系统桌面窗口
-        _T("Windows.UI.Core.CoreWindow"), // 名为 "Windows 输入体验"的隐藏窗口
-        _T("ApplicationFrameWindow"),
-        _T("Windows.Internal.Shell.TabProxyWindow"),
-        _T("Xaml_WindowedPopupClass"),
-        _T("HwndWrapper")
-        // ... 添加其他系统窗口类名
-    };
-    for (const auto &systemClassName : SYSTEM_WINDOW_CLASS_NAMES)
-    {
-        if (_tcsncmp(className, systemClassName, _tcslen(systemClassName)) == 0)
-        {
-            isSystemWindow = true;
-            break;
-        }
-    }
-
-    // 排除系统窗口和不可见窗口
     if (isSystemWindow || !IsWindowVisible(hwnd) || (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE) == 0)
         return TRUE;
 
@@ -195,29 +197,7 @@ BOOL CALLBACK EnumWindowProc(HWND hwnd, LPARAM lParam)
     Napi::Env &env = data->env;
     std::vector<WindowInfo> &windowInfos = data->windowInfos;
 
-    TCHAR className[256];
-    GetClassName(hwnd, className, sizeof(className));
-
-    bool isSystemWindow = false;
-    static const TCHAR *SYSTEM_WINDOW_CLASS_NAMES[] = {
-        _T("Progman"),
-        _T("Shell_TrayWnd"),              // 任务栏
-        _T("WorkerW"),                    // 某些系统桌面窗口
-        _T("Windows.UI.Core.CoreWindow"), // 名为 "Windows 输入体验"的隐藏窗口
-        _T("ApplicationFrameWindow"),
-        _T("Windows.Internal.Shell.TabProxyWindow"),
-        _T("Xaml_WindowedPopupClass"),
-        _T("HwndWrapper")
-        // ... 添加其他系统窗口类名
-    };
-    for (const auto &systemClassName : SYSTEM_WINDOW_CLASS_NAMES)
-    {
-        if (_tcsncmp(className, systemClassName, _tcslen(systemClassName)) == 0)
-        {
-            isSystemWindow = true;
-            break;
-        }
-    }
+    bool isSystemWindow = IsSystemWindowClass(hwnd);
 
     WINDOWPLACEMENT wp;
     ZeroMemory(&wp, sizeof(wp));
