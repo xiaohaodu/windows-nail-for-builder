@@ -8,7 +8,16 @@
             "defines": ["NAPI_CPP_EXCEPTIONS"],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
-            "conditions": [['OS=="win"', {"libraries": ["User32.lib"]}]],
+            "conditions": [
+                ['OS=="win"', {"libraries": ["User32.lib"]}],
+                ['OS=="mac"', {
+                    "libraries": [
+                        "-framework CoreGraphics",
+                        "-framework Carbon",
+                        "-framework ApplicationServices"
+                    ]
+                }]
+            ],
             "msvs_settings": {
                 "VCCLCompilerTool": {"AdditionalOptions": ["/utf-8", "/EHsc"]}
             },
