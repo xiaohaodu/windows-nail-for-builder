@@ -8,6 +8,11 @@
             "defines": ["NAPI_CPP_EXCEPTIONS"],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
+            "xcode_settings": {
+                "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                "CLANG_CXX_LIBRARY": "libc++",
+                "OTHER_CPLUSPLUSFLAGS": ["-fexceptions"]
+            },
             "conditions": [
                 ['OS=="win"', {"libraries": ["User32.lib"]}],
                 ['OS=="mac"', {
@@ -15,7 +20,12 @@
                         "-framework CoreGraphics",
                         "-framework Carbon",
                         "-framework ApplicationServices"
-                    ]
+                    ],
+                    "xcode_settings": {
+                        "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                        "CLANG_CXX_LIBRARY": "libc++",
+                        "OTHER_CPLUSPLUSFLAGS": ["-fexceptions"]
+                    }
                 }]
             ],
             "msvs_settings": {

@@ -14,7 +14,9 @@
     #include <mach/mach.h>
 #endif
 
+#ifdef _WIN32
 #include "third_party/WINDOWINFO/WINDOWINFO.h"
+#endif
 #include "third_party/LOG/LOG.h"
 
 #ifdef _WIN32
@@ -67,7 +69,7 @@ bool IsSystemWindowClass(WindowHandle windowId)
     if (ownerName)
     {
         char ownerNameC[256];
-        CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC));
+        CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC), kCFStringEncodingUTF8);
         std::string ownerNameStr(ownerNameC);
         
         // 系统进程列表
@@ -105,7 +107,7 @@ struct EnumData
 {
     CGPoint point;
     CGWindowID windowIdResult;
-    EnumData(int x, int y) : point{x, y}, windowIdResult(0) {} 
+    EnumData(int x, int y) : point{static_cast<CGFloat>(x), static_cast<CGFloat>(y)}, windowIdResult(0) {} 
 };
 #endif
 
@@ -321,7 +323,7 @@ std::string GetWindowTitle(CGWindowID windowId)
                 if (windowName)
                 {
                     char titleBuffer[512];
-                    CFStringGetCString(windowName, titleBuffer, sizeof(titleBuffer));
+                    CFStringGetCString(windowName, titleBuffer, sizeof(titleBuffer), kCFStringEncodingUTF8);
                     title = titleBuffer;
                 }
                 break;
@@ -432,7 +434,7 @@ Napi::Value GetForegroundWindowAtPosition(const Napi::CallbackInfo &info)
             if (ownerName)
             {
                 char ownerNameC[256];
-                CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC));
+                CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC), kCFStringEncodingUTF8);
                 std::string ownerNameStr(ownerNameC);
                 
                 // 跳过系统进程
@@ -566,7 +568,7 @@ Napi::Value GetAllWindowsInfo(const Napi::CallbackInfo &info)
             continue;
 
         char ownerNameC[256];
-        CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC));
+        CFStringGetCString(ownerName, ownerNameC, sizeof(ownerNameC), kCFStringEncodingUTF8);
         std::string ownerNameStr(ownerNameC);
         
         // 跳过系统进程
@@ -596,7 +598,7 @@ Napi::Value GetAllWindowsInfo(const Napi::CallbackInfo &info)
             continue;
 
         char windowNameC[512];
-        CFStringGetCString(windowName, windowNameC, sizeof(windowNameC));
+        CFStringGetCString(windowName, windowNameC, sizeof(windowNameC), kCFStringEncodingUTF8);
         std::string windowTitle(windowNameC);
         
         if (windowTitle.empty())
